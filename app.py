@@ -40,8 +40,15 @@ df = pd.DataFrame(
 
 st.markdown("## 🚲 Ecobici Stations in Mexico City")
 
-st.dataframe(df.head())
+col1, col2 = st.columns(2)
 
+with col1:
+    st.metric("Total Stations", len(df))
+
+with col2:
+    st.metric("Average Capacity", round(df['capacity'].mean(), 2))
+
+st.dataframe(df[['name', 'lat', 'lon', 'capacity']].head(10))
 # MAP
 
 centroide_lat = df['lat'].mean()
