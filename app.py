@@ -4,9 +4,7 @@ import pandas as pd
 import folium
 from streamlit_folium import st_folium
 
-# =========================
 # HEADER
-# =========================
 
 def show_header(text_title: str):
     col1, col2 = st.columns([1, 6])
@@ -23,60 +21,41 @@ def show_header(text_title: str):
         st.caption("Universidad Panamericana")
 
 
-header_container = st.container()
-main_container = st.container()
+show_header("Dashboard Ecobici CDMX")
 
-with header_container:
-    show_header("Dashboard Ecobici CDMX")
-
-# =========================
-# DATA EXTRACTION
-# =========================
+# DATA
 
 url = "https://gbfs.mex.lyftbikes.com/gbfs/gbfs.json"
 
 pagina = requests.get(url).json()
 ligas = pagina['data']['es']['feeds']
 
-liga1, liga2 = [liga for liga in ligas if 'station' in liga['name']]
+liga = [liga for liga in ligas if liga['name'] == 'station_information'][0]
 
-df1 = pd.DataFrame(
-    requests.get(liga1['url']).json()['data']['stations']
-).iloc[:, :5]
+df = pd.DataFrame(
+    requests.get(liga['url']).json()['data']['stations']
+)
 
-df2 = pd.DataFrame(
-    requests.get(liga2['url']).json()['data']['stations']
-)[['station_id', 'name', 'lat', 'lon', 'capacity']]
+# CONTENT
 
-df = pd.concat([df1, df2], axis=1)
+st.markdown("## 🚲 Ecobici Stations in Mexico City")
 
-# Eliminar columnas duplicadas
-df = df.loc[:, ~df.columns.duplicated()]
+st.dataframe(df.head())
 
-# =========================
-# MAIN CONTENT
-# =========================
+# MAP
 
-with main_container:
+centroide_lat = df['lat'].mean()
+centroide_lon = df['lon'].mean()
 
-    st.markdown("## 🚲 Ecobici Stations in Mexico City")
+mapa = folium.Map(
+    location=[centroide_lat, centroide_lon],
+    zoom_start=12
+)
 
-    st.dataframe(df.head())
+for i in range(len(df)):
+    folium.Marker(
+        location=[df['lat'][i], df['lon'][i]],
+        popup=df['name'][i]
+    ).add_to(mapa)
 
-    st.markdown("### Interactive Map")
-
-    centroide_lat = df['lat'].mean()
-    centroide_lon = df['lon'].mean()
-
-    mapa = folium.Map(
-        location=[centroide_lat, centroide_lon],
-        zoom_start=12
-    )
-
-    for i in range(len(df)):
-        folium.Marker(
-            location=[df['lat'][i], df['lon'][i]],
-            popup=df['name'][i]
-        ).add_to(mapa)
-
-    st_folium(mapa, width=700, height=500)
+st_folium(mapa, width=700, height=500)
