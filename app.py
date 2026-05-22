@@ -13,10 +13,14 @@ def show_header(text_title: str):
         st.caption("Instructor: Edgar Avalos-Gauna (2026), Universidad Panamericana")
 
 
-    row1, row2 = st.rows([1,5])
+# Header section
+header_container = st.container()
 
-with row1:
-show_header('My first dashboard using Streamlit')
+# Main content sectlion
+main_container = st.container()
 
-with row2:
-    st.markdown('**Hola** Mundo!!!')
+with header_container:
+    show_header( 'My first dashboard using Streamlit')
+
+with main_container:
+    st.markdown( ' ** Hola ** Mundo !!! ')
