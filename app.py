@@ -1,11 +1,6 @@
-# Streamlit: Estudio de caso Ecobici
-
 import streamlit as st
 import requests
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import geopandas as gpd
 import folium
 from streamlit_folium import st_folium
 
@@ -24,8 +19,8 @@ def show_header(text_title: str):
 
     with col2:
         st.title(text_title)
-        st.caption("📘 Developed for: *Business Intelligence (Graduate Level)*")
-        st.caption("Instructor: Edgar Avalos-Gauna (2026), Universidad Panamericana")
+        st.caption("📘 Developed for: Business Intelligence")
+        st.caption("Universidad Panamericana")
 
 
 header_container = st.container()
@@ -64,34 +59,6 @@ with main_container:
     st.markdown("## 🚲 Ecobici Stations in Mexico City")
 
     st.dataframe(df.head())
-
-    # =========================
-    # STATIC MAP
-    # =========================
-
-    st.markdown("### Static Visualization")
-
-    cdmx_url = "https://raw.githubusercontent.com/edavgaun/GeoJson/refs/heads/main/CDMX/alcaldias.geojson"
-    cdmx = gpd.read_file(cdmx_url)
-
-    fig, ax = plt.subplots(figsize=(8, 8))
-
-    cdmx.boundary.plot(ax=ax, color='black', linewidth=0.5)
-
-    sns.scatterplot(
-        data=df,
-        x='lon',
-        y='lat',
-        ax=ax
-    )
-
-    ax.axis('off')
-
-    st.pyplot(fig)
-
-    # =========================
-    # INTERACTIVE MAP
-    # =========================
 
     st.markdown("### Interactive Map")
 
