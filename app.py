@@ -50,6 +50,9 @@ df2 = pd.DataFrame(
 
 df = pd.concat([df1, df2], axis=1)
 
+# Eliminar columnas duplicadas
+df = df.loc[:, ~df.columns.duplicated()]
+
 # =========================
 # MAIN CONTENT
 # =========================
