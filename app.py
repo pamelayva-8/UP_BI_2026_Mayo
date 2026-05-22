@@ -1,26 +1,112 @@
+# Streamlit: Estudio de caso Ecobici
+
 import streamlit as st
+import requests
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import geopandas as gpd
+import folium
+from streamlit_folium import st_folium
+
+# =========================
+# HEADER
+# =========================
 
 def show_header(text_title: str):
-    # Layout: logo + title side by side
     col1, col2 = st.columns([1, 6])
-    
+
     with col1:
-        st.image("https://upload.wikimedia.org/wikipedia/commons/3/32/Universidad_Panamericana_Logo_Dorado.jpg", width=200)
-        
+        st.image(
+            "https://upload.wikimedia.org/wikipedia/commons/3/32/Universidad_Panamericana_Logo_Dorado.jpg",
+            width=120
+        )
+
     with col2:
         st.title(text_title)
         st.caption("📘 Developed for: *Business Intelligence (Graduate Level)*")
         st.caption("Instructor: Edgar Avalos-Gauna (2026), Universidad Panamericana")
 
 
-# Header section
 header_container = st.container()
-
-# Main content sectlion
 main_container = st.container()
 
 with header_container:
-    show_header( 'My first dashboard using Streamlit')
+    show_header("Dashboard Ecobici CDMX")
+
+# =========================
+# DATA EXTRACTION
+# =========================
+
+url = "https://gbfs.mex.lyftbikes.com/gbfs/gbfs.json"
+
+pagina = requests.get(url).json()
+ligas = pagina['data']['es']['feeds']
+
+liga1, liga2 = [liga for liga in ligas if 'station' in liga['name']]
+
+df1 = pd.DataFrame(
+    requests.get(liga1['url']).json()['data']['stations']
+).iloc[:, :5]
+
+df2 = pd.DataFrame(
+    requests.get(liga2['url']).json()['data']['stations']
+)[['station_id', 'name', 'lat', 'lon', 'capacity']]
+
+df = pd.concat([df1, df2], axis=1)
+
+# =========================
+# MAIN CONTENT
+# =========================
 
 with main_container:
-    st.markdown( ' ** Hola ** Mundo !!! ')
+
+    st.markdown("## 🚲 Ecobici Stations in Mexico City")
+
+    st.dataframe(df.head())
+
+    # =========================
+    # STATIC MAP
+    # =========================
+
+    st.markdown("### Static Visualization")
+
+    cdmx_url = "https://raw.githubusercontent.com/edavgaun/GeoJson/refs/heads/main/CDMX/alcaldias.geojson"
+    cdmx = gpd.read_file(cdmx_url)
+
+    fig, ax = plt.subplots(figsize=(8, 8))
+
+    cdmx.boundary.plot(ax=ax, color='black', linewidth=0.5)
+
+    sns.scatterplot(
+        data=df,
+        x='lon',
+        y='lat',
+        ax=ax
+    )
+
+    ax.axis('off')
+
+    st.pyplot(fig)
+
+    # =========================
+    # INTERACTIVE MAP
+    # =========================
+
+    st.markdown("### Interactive Map")
+
+    centroide_lat = df['lat'].mean()
+    centroide_lon = df['lon'].mean()
+
+    mapa = folium.Map(
+        location=[centroide_lat, centroide_lon],
+        zoom_start=12
+    )
+
+    for i in range(len(df)):
+        folium.Marker(
+            location=[df['lat'][i], df['lon'][i]],
+            popup=df['name'][i]
+        ).add_to(mapa)
+
+    st_folium(mapa, width=700, height=500)
